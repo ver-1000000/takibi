@@ -1,0 +1,15 @@
+<svg:radialGradient [attr.id]="id">
+  <stop offset="0" stop-color="hsl(10, 90%, 80%)" />
+  <stop offset=".4" stop-color="hsl(20, 90%, 60%)" />
+  <stop offset="1" stop-color="hsl(40, 90%, 0%)" />
+</svg:radialGradient>
+
+<svg:circle
+  attr.fill="url(#{{ id }})"
+  [attr.r]="VOLUME"
+  [attr.cx]="seed.cx"
+  [attr.cy]="seed.cy"
+  [style.animationDuration.ms]="DURATION"
+  [style.animationDelay.ms]="i * DURATION / fireSeeds.length"
+  *ngFor="let seed of fireSeeds; index as i; trackBy: trackByFn"
+/>
