@@ -130,6 +130,13 @@
     }
   },
   "defaultProject": "takibi",
+  "schematics": {
+    "@schematics/angular": {
+      "component": {
+        "changeDetection": "OnPush"
+      }
+    }
+  },
   "cli": {
     "analytics": "37bc660e-a353-4f27-90ef-695920275998"
   }
