@@ -6,12 +6,14 @@ import { ServiceWorkerModule } from '@angular/service-worker';
 import { environment } from '../environments/environment';
 import { FlameComponent } from './flame/flame.component';
 import { SafePipe } from './safe.pipe';
+import { KeyTrackByPipe } from './key-track-by.pipe';
 
 @NgModule({
   declarations: [
     AppComponent,
     FlameComponent,
-    SafePipe
+    SafePipe,
+    KeyTrackByPipe
   ],
   imports: [
     BrowserModule,

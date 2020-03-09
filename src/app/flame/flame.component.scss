@@ -3,6 +3,7 @@ circle {
   animation-name: particle;
   animation-iteration-count: infinite;
   opacity: 0;
+  will-change: transform, opacity;
 }
 
 @keyframes particle {

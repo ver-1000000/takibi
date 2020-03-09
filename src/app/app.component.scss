@@ -10,5 +10,9 @@
   background: #000;
   height: 100%;
   margin: auto;
-  width: auto;
+  width: 100%;
+}
+
+.flame {
+  transition: transform ease 300ms;
 }

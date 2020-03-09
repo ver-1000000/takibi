@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 
 /** 火種となるcircle要素の情報。 */
 interface FireSeed {
@@ -23,8 +23,8 @@ const getUUID = () =>
   });
 
 /** 火種群を作成する。 */
-const getFireSeeds = () => {
-  const random = () => Math.floor(Math.random() * VOLUME);
+const getFireSeeds = (): FireSeed[] => {
+  const random = () => Math.ceil(Math.random() * VOLUME);
   return [...Array(SIZE)].map((_, i) => ({
     id: i,
     cx: random(),
@@ -46,8 +46,5 @@ export class FlameComponent {
   readonly fireSeeds = getFireSeeds();
   readonly VOLUME = VOLUME;
   readonly DURATION = DURATION;
-
-  trackByFn(i: number, item: FireSeed) {
-    return item.id;
-  }
+  @Input() hue = 0;
 }

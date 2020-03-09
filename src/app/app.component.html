@@ -1,8 +1,9 @@
-<svg class="canvas" viewBox="0 0 800 800" (click)="add($event)">
+<svg class="canvas" (click)="detectPoint($event)">
   <svg:g
     appFlame
+    class="flame"
     attr.transform="translate({{ flame.x }}, {{ flame.y }})"
-    (click)="remove(flame); $event.stopPropagation()"
-    *ngFor="let flame of flames; trackBy: trackByFn"
+    [hue]="flame.hue"
+    *ngFor="let flame of flames; trackBy: null | keyTrackBy"
   ></svg:g>
 </svg>
