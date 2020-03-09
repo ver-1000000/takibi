@@ -133,7 +133,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
       }
     }
 
-    var ERR_MSG = 'Firebaseでなにか問題が発生したのかもしれません。 しばらく経ってから再度更新して下さい。';
+    var ERR_MSG = 'Firebaseでなにか問題が発生している可能性があります。 しばらく経ってから再度更新して下さい。';
 
     var AppComponent =
     /*#__PURE__*/
@@ -161,7 +161,6 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
           this.angularFireAuth.signInAnonymously();
           this.angularFireAuth.onAuthStateChanged(function (user) {
             if (user == null) {
-              alert(ERR_MSG);
               return;
             }
 
@@ -206,10 +205,14 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
       }, {
         key: "detectPoint",
         value: function detectPoint(e) {
-          var _ref = this.selfFlame || {},
-              id = _ref.id,
-              hue = _ref.hue;
+          if (this.selfFlame == null) {
+            alert(ERR_MSG);
+            return;
+          }
 
+          var _this$selfFlame = this.selfFlame,
+              id = _this$selfFlame.id,
+              hue = _this$selfFlame.hue;
           this.selfFlame = new _flame__WEBPACK_IMPORTED_MODULE_3__["Flame"]({
             id: id,
             hue: hue,

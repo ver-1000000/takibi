@@ -60,7 +60,7 @@ function AppComponent__svg_g_1_Template(rf, ctx) { if (rf & 1) {
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵattributeInterpolate2"]("transform", "translate(", flame_r1.x, ", ", flame_r1.y, ")");
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("hue", flame_r1.hue);
 } }
-const ERR_MSG = 'Firebaseでなにか問題が発生したのかもしれません。 しばらく経ってから再度更新して下さい。';
+const ERR_MSG = 'Firebaseでなにか問題が発生している可能性があります。 しばらく経ってから再度更新して下さい。';
 class AppComponent {
     constructor(angularFireAuth, angularFirestore, cdr) {
         this.angularFireAuth = angularFireAuth;
@@ -77,7 +77,6 @@ class AppComponent {
         this.angularFireAuth.signInAnonymously();
         this.angularFireAuth.onAuthStateChanged(user => {
             if (user == null) {
-                alert(ERR_MSG);
                 return;
             }
             this.flameDocument = this.flameCollection.doc(user.uid);
@@ -105,7 +104,11 @@ class AppComponent {
     }
     /** SVGクリック時に座標を決定し、炎の追加もしくは移動を行う。 */
     detectPoint(e) {
-        const { id, hue } = this.selfFlame || {};
+        if (this.selfFlame == null) {
+            alert(ERR_MSG);
+            return;
+        }
+        const { id, hue } = this.selfFlame;
         this.selfFlame = new _flame__WEBPACK_IMPORTED_MODULE_3__["Flame"]({ id, hue, x: e.x, y: e.y });
         if (this.flameDocument) {
             this.flameDocument.set(Object.assign({}, this.selfFlame), { merge: true });
