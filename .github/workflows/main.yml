@@ -26,7 +26,6 @@ jobs:
           appId: '${{ secrets.APP_ID }}',\n\
           measurementId: '${{ secrets.MEASUREMENT_ID }}'\n\
         };" > ./src/environments/environment.firebase.ts
-        cat ./src/environments/environment.firebase.ts
 
     - name: Install and Build
       run: |

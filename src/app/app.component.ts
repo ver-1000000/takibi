@@ -17,7 +17,7 @@ import { first, map } from 'rxjs/operators';
 import { Flame } from './flame';
 
 const ERR_MSG =
-  'Firebaseでなにか問題が発生したのかもしれません。 しばらく経ってから再度更新して下さい。';
+  'Firebaseでなにか問題が発生している可能性があります。 しばらく経ってから再度更新して下さい。';
 
 @Component({
   selector: 'app-root',
@@ -45,7 +45,6 @@ export class AppComponent implements OnInit {
     this.angularFireAuth.signInAnonymously();
     this.angularFireAuth.onAuthStateChanged(user => {
       if (user == null) {
-        alert(ERR_MSG);
         return;
       }
       this.flameDocument = this.flameCollection.doc(user.uid);
@@ -76,7 +75,11 @@ export class AppComponent implements OnInit {
 
   /** SVGクリック時に座標を決定し、炎の追加もしくは移動を行う。 */
   detectPoint(e: MouseEvent) {
-    const { id, hue } = this.selfFlame || {};
+    if (this.selfFlame == null) {
+      alert(ERR_MSG);
+      return;
+    }
+    const { id, hue } = this.selfFlame;
     this.selfFlame = new Flame({ id, hue, x: e.x, y: e.y });
     if (this.flameDocument) {
       this.flameDocument.set({ ...this.selfFlame }, { merge: true });
