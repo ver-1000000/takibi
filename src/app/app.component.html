@@ -4,6 +4,6 @@
     class="flame"
     attr.transform="translate({{ flame.x }}, {{ flame.y }})"
     [hue]="flame.hue"
-    *ngFor="let flame of flames; trackBy: null | keyTrackBy"
+    *ngFor="let flame of flames$ | async; trackBy: 'id' | keyTrackBy"
   ></svg:g>
 </svg>
