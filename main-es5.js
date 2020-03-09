@@ -71,97 +71,159 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
     /* harmony import */
 
 
-    var _flame__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(
+    var firebase_firestore__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(
+    /*! firebase/firestore */
+    "./node_modules/firebase/firestore/dist/index.esm.js");
+    /* harmony import */
+
+
+    var rxjs_operators__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(
+    /*! rxjs/operators */
+    "./node_modules/rxjs/_esm2015/operators/index.js");
+    /* harmony import */
+
+
+    var _flame__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(
     /*! ./flame */
     "./src/app/flame.ts");
     /* harmony import */
 
 
-    var _angular_common__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(
+    var _angular_fire_auth__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(
+    /*! @angular/fire/auth */
+    "./node_modules/@angular/fire/__ivy_ngcc__/fesm2015/angular-fire-auth.js");
+    /* harmony import */
+
+
+    var _angular_fire_firestore__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(
+    /*! @angular/fire/firestore */
+    "./node_modules/@angular/fire/__ivy_ngcc__/fesm2015/angular-fire-firestore.js");
+    /* harmony import */
+
+
+    var _angular_common__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(
     /*! @angular/common */
     "./node_modules/@angular/common/__ivy_ngcc__/fesm2015/common.js");
     /* harmony import */
 
 
-    var _flame_flame_component__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(
+    var _flame_flame_component__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(
     /*! ./flame/flame.component */
     "./src/app/flame/flame.component.ts");
+    /* harmony import */
+
+
+    var _key_track_by_pipe__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(
+    /*! ./key-track-by.pipe */
+    "./src/app/key-track-by.pipe.ts");
 
     function AppComponent__svg_g_1_Template(rf, ctx) {
       if (rf & 1) {
-        var _r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵgetCurrentView"]();
-
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnamespaceSVG"]();
 
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "g", 2);
-
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("click", function AppComponent__svg_g_1_Template__svg_g_click_0_listener($event) {
-          _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r3);
-
-          var flame_r1 = ctx.$implicit;
-
-          var ctx_r2 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]();
-
-          ctx_r2.remove(flame_r1);
-          return $event.stopPropagation();
-        });
-
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](0, "g", 2);
       }
 
       if (rf & 2) {
         var flame_r1 = ctx.$implicit;
 
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵattributeInterpolate2"]("transform", "translate(", flame_r1.x, ", ", flame_r1.y, ")");
+
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("hue", flame_r1.hue);
       }
     }
-    /** SVGをクリックした時に拡縮されたキャンバスに整合性を取った座標を返す。 */
 
-
-    var getPoint = function getPoint(mouseEvent) {
-      var svg = mouseEvent.target;
-      var _svg$viewBox$baseVal = svg.viewBox.baseVal,
-          width = _svg$viewBox$baseVal.width,
-          height = _svg$viewBox$baseVal.height;
-      var clientWidth = svg.clientWidth,
-          clientHeight = svg.clientHeight;
-      return {
-        x: width / clientWidth * mouseEvent.offsetX,
-        y: height / clientHeight * mouseEvent.offsetY
-      };
-    };
+    var ERR_MSG = 'Firebaseでなにか問題が発生したのかもしれません。 しばらく経ってから再度更新して下さい。';
 
     var AppComponent =
     /*#__PURE__*/
     function () {
-      function AppComponent() {
+      function AppComponent(angularFireAuth, angularFirestore, cdr) {
         _classCallCheck(this, AppComponent);
 
-        this.flames = [];
+        this.angularFireAuth = angularFireAuth;
+        this.angularFirestore = angularFirestore;
+        this.cdr = cdr;
+        this.flameCollection = this.angularFirestore.collection('flames');
+        this.flames$ = this.flameCollection.valueChanges();
       }
+      /**
+       * - 古い炎を削除する。
+       * - 匿名ログインし、ドキュメントを準備する。
+       */
+
 
       _createClass(AppComponent, [{
-        key: "add",
-        value: function add(e) {
-          var _getPoint = getPoint(e),
-              x = _getPoint.x,
-              y = _getPoint.y;
+        key: "ngOnInit",
+        value: function ngOnInit() {
+          var _this = this;
 
-          this.flames.push(new _flame__WEBPACK_IMPORTED_MODULE_1__["Flame"]({
-            birthDate: new Date(),
-            x: x,
-            y: y
-          }));
+          this.angularFireAuth.signInAnonymously();
+          this.angularFireAuth.onAuthStateChanged(function (user) {
+            if (user == null) {
+              alert(ERR_MSG);
+              return;
+            }
+
+            _this.flameDocument = _this.flameCollection.doc(user.uid);
+
+            _this.flameDocument.valueChanges().pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_2__["first"])()).pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_2__["map"])(function (value) {
+              return new _flame__WEBPACK_IMPORTED_MODULE_3__["Flame"](Object.assign(Object.assign({}, value), {
+                id: user.uid
+              }));
+            })).subscribe(function (value) {
+              return _this.selfFlame = value;
+            });
+
+            _this.deleteOneMinuteAgoCollection();
+          });
         }
+        /** 最終更新日が1分前以前のコレクションを全て削除する。 */
+
       }, {
-        key: "remove",
-        value: function remove(flame) {
-          this.flames.splice(this.flames.indexOf(flame), 1);
+        key: "deleteOneMinuteAgoCollection",
+        value: function deleteOneMinuteAgoCollection() {
+          var _this2 = this;
+
+          return this.angularFirestore.collection('flames', function (ref) {
+            var oneMinuteAgo = function () {
+              var d = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : new Date();
+              return new Date(d.setMinutes(d.getMinutes() - 1));
+            }();
+
+            return ref.where('updatedAt', '<=', oneMinuteAgo);
+          }).get().subscribe(function (querySnapshot) {
+            var batch = _this2.angularFirestore.firestore.batch();
+
+            querySnapshot.forEach(function (doc) {
+              return batch.delete(doc.ref);
+            });
+            return batch.commit();
+          });
         }
+        /** SVGクリック時に座標を決定し、炎の追加もしくは移動を行う。 */
+
       }, {
-        key: "trackByFn",
-        value: function trackByFn(i, item) {
-          return item;
+        key: "detectPoint",
+        value: function detectPoint(e) {
+          var _ref = this.selfFlame || {},
+              id = _ref.id,
+              hue = _ref.hue;
+
+          this.selfFlame = new _flame__WEBPACK_IMPORTED_MODULE_3__["Flame"]({
+            id: id,
+            hue: hue,
+            x: e.x,
+            y: e.y
+          });
+
+          if (this.flameDocument) {
+            this.flameDocument.set(Object.assign({}, this.selfFlame), {
+              merge: true
+            });
+          }
+
+          this.cdr.markForCheck();
         }
       }]);
 
@@ -169,15 +231,15 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
     }();
 
     AppComponent.ɵfac = function AppComponent_Factory(t) {
-      return new (t || AppComponent)();
+      return new (t || AppComponent)(_angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_fire_auth__WEBPACK_IMPORTED_MODULE_4__["AngularFireAuth"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_fire_firestore__WEBPACK_IMPORTED_MODULE_5__["AngularFirestore"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_core__WEBPACK_IMPORTED_MODULE_0__["ChangeDetectorRef"]));
     };
 
     AppComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({
       type: AppComponent,
       selectors: [["app-root"]],
-      decls: 2,
-      vars: 2,
-      consts: [["viewBox", "0 0 800 800", 1, "canvas", 3, "click"], ["appFlame", "", 3, "click", 4, "ngFor", "ngForOf", "ngForTrackBy"], ["appFlame", "", 3, "click"]],
+      decls: 4,
+      vars: 6,
+      consts: [[1, "canvas", 3, "click"], ["appFlame", "", "class", "flame", 3, "hue", 4, "ngFor", "ngForOf", "ngForTrackBy"], ["appFlame", "", 1, "flame", 3, "hue"]],
       template: function AppComponent_Template(rf, ctx) {
         if (rf & 1) {
           _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnamespaceSVG"]();
@@ -185,10 +247,14 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
           _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "svg", 0);
 
           _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("click", function AppComponent_Template__svg_svg_click_0_listener($event) {
-            return ctx.add($event);
+            return ctx.detectPoint($event);
           });
 
-          _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](1, AppComponent__svg_g_1_Template, 1, 2, "g", 1);
+          _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](1, AppComponent__svg_g_1_Template, 1, 3, "g", 1);
+
+          _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpipe"](2, "async");
+
+          _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpipe"](3, "keyTrackBy");
 
           _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         }
@@ -196,11 +262,12 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
         if (rf & 2) {
           _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
 
-          _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngForOf", ctx.flames)("ngForTrackBy", ctx.trackByFn);
+          _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngForOf", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpipeBind1"](2, 2, ctx.flames$))("ngForTrackBy", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpipeBind1"](3, 4, "id"));
         }
       },
-      directives: [_angular_common__WEBPACK_IMPORTED_MODULE_2__["NgForOf"], _flame_flame_component__WEBPACK_IMPORTED_MODULE_3__["FlameComponent"]],
-      styles: ["[_nghost-%COMP%] {\n  align-content: center;\n  background: #000;\n  display: -webkit-box;\n  display: flex;\n  height: 100vh;\n  -webkit-box-pack: center;\n          justify-content: center;\n}\n\n.canvas[_ngcontent-%COMP%] {\n  background: #000;\n  height: 100%;\n  margin: auto;\n  width: auto;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi9ob21lL3J1bm5lci93b3JrL3Rha2liaS90YWtpYmkvc3JjL2FwcC9hcHAuY29tcG9uZW50LnNjc3MiLCJzcmMvYXBwL2FwcC5jb21wb25lbnQuc2NzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTtFQUNFLHFCQUFBO0VBQ0EsZ0JBQUE7RUFDQSxvQkFBQTtFQUFBLGFBQUE7RUFDQSxhQUFBO0VBQ0Esd0JBQUE7VUFBQSx1QkFBQTtBQ0NGOztBREVBO0VBQ0UsZ0JBQUE7RUFDQSxZQUFBO0VBQ0EsWUFBQTtFQUNBLFdBQUE7QUNDRiIsImZpbGUiOiJzcmMvYXBwL2FwcC5jb21wb25lbnQuc2NzcyIsInNvdXJjZXNDb250ZW50IjpbIjpob3N0IHtcbiAgYWxpZ24tY29udGVudDogY2VudGVyO1xuICBiYWNrZ3JvdW5kOiAjMDAwO1xuICBkaXNwbGF5OiBmbGV4O1xuICBoZWlnaHQ6IDEwMHZoO1xuICBqdXN0aWZ5LWNvbnRlbnQ6IGNlbnRlcjtcbn1cblxuLmNhbnZhcyB7XG4gIGJhY2tncm91bmQ6ICMwMDA7XG4gIGhlaWdodDogMTAwJTtcbiAgbWFyZ2luOiBhdXRvO1xuICB3aWR0aDogYXV0bztcbn1cbiIsIjpob3N0IHtcbiAgYWxpZ24tY29udGVudDogY2VudGVyO1xuICBiYWNrZ3JvdW5kOiAjMDAwO1xuICBkaXNwbGF5OiBmbGV4O1xuICBoZWlnaHQ6IDEwMHZoO1xuICBqdXN0aWZ5LWNvbnRlbnQ6IGNlbnRlcjtcbn1cblxuLmNhbnZhcyB7XG4gIGJhY2tncm91bmQ6ICMwMDA7XG4gIGhlaWdodDogMTAwJTtcbiAgbWFyZ2luOiBhdXRvO1xuICB3aWR0aDogYXV0bztcbn0iXX0= */"],
+      directives: [_angular_common__WEBPACK_IMPORTED_MODULE_6__["NgForOf"], _flame_flame_component__WEBPACK_IMPORTED_MODULE_7__["FlameComponent"]],
+      pipes: [_angular_common__WEBPACK_IMPORTED_MODULE_6__["AsyncPipe"], _key_track_by_pipe__WEBPACK_IMPORTED_MODULE_8__["KeyTrackByPipe"]],
+      styles: ["[_nghost-%COMP%] {\n  align-content: center;\n  background: #000;\n  display: -webkit-box;\n  display: flex;\n  height: 100vh;\n  -webkit-box-pack: center;\n          justify-content: center;\n}\n\n.canvas[_ngcontent-%COMP%] {\n  background: #000;\n  height: 100%;\n  margin: auto;\n  width: 100%;\n}\n\n.flame[_ngcontent-%COMP%] {\n  -webkit-transition: -webkit-transform ease 300ms;\n  transition: -webkit-transform ease 300ms;\n  transition: transform ease 300ms;\n  transition: transform ease 300ms, -webkit-transform ease 300ms;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi9ob21lL3J1bm5lci93b3JrL3Rha2liaS90YWtpYmkvc3JjL2FwcC9hcHAuY29tcG9uZW50LnNjc3MiLCJzcmMvYXBwL2FwcC5jb21wb25lbnQuc2NzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTtFQUNFLHFCQUFBO0VBQ0EsZ0JBQUE7RUFDQSxvQkFBQTtFQUFBLGFBQUE7RUFDQSxhQUFBO0VBQ0Esd0JBQUE7VUFBQSx1QkFBQTtBQ0NGOztBREVBO0VBQ0UsZ0JBQUE7RUFDQSxZQUFBO0VBQ0EsWUFBQTtFQUNBLFdBQUE7QUNDRjs7QURFQTtFQUNFLGdEQUFBO0VBQUEsd0NBQUE7RUFBQSxnQ0FBQTtFQUFBLDhEQUFBO0FDQ0YiLCJmaWxlIjoic3JjL2FwcC9hcHAuY29tcG9uZW50LnNjc3MiLCJzb3VyY2VzQ29udGVudCI6WyI6aG9zdCB7XG4gIGFsaWduLWNvbnRlbnQ6IGNlbnRlcjtcbiAgYmFja2dyb3VuZDogIzAwMDtcbiAgZGlzcGxheTogZmxleDtcbiAgaGVpZ2h0OiAxMDB2aDtcbiAganVzdGlmeS1jb250ZW50OiBjZW50ZXI7XG59XG5cbi5jYW52YXMge1xuICBiYWNrZ3JvdW5kOiAjMDAwO1xuICBoZWlnaHQ6IDEwMCU7XG4gIG1hcmdpbjogYXV0bztcbiAgd2lkdGg6IDEwMCU7XG59XG5cbi5mbGFtZSB7XG4gIHRyYW5zaXRpb246IHRyYW5zZm9ybSBlYXNlIDMwMG1zO1xufVxuIiwiOmhvc3Qge1xuICBhbGlnbi1jb250ZW50OiBjZW50ZXI7XG4gIGJhY2tncm91bmQ6ICMwMDA7XG4gIGRpc3BsYXk6IGZsZXg7XG4gIGhlaWdodDogMTAwdmg7XG4gIGp1c3RpZnktY29udGVudDogY2VudGVyO1xufVxuXG4uY2FudmFzIHtcbiAgYmFja2dyb3VuZDogIzAwMDtcbiAgaGVpZ2h0OiAxMDAlO1xuICBtYXJnaW46IGF1dG87XG4gIHdpZHRoOiAxMDAlO1xufVxuXG4uZmxhbWUge1xuICB0cmFuc2l0aW9uOiB0cmFuc2Zvcm0gZWFzZSAzMDBtcztcbn0iXX0= */"],
       changeDetection: 0
     });
     /*@__PURE__*/
@@ -214,7 +281,15 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
           styleUrls: ['./app.component.scss'],
           changeDetection: _angular_core__WEBPACK_IMPORTED_MODULE_0__["ChangeDetectionStrategy"].OnPush
         }]
-      }], null, null);
+      }], function () {
+        return [{
+          type: _angular_fire_auth__WEBPACK_IMPORTED_MODULE_4__["AngularFireAuth"]
+        }, {
+          type: _angular_fire_firestore__WEBPACK_IMPORTED_MODULE_5__["AngularFirestore"]
+        }, {
+          type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["ChangeDetectorRef"]
+        }];
+      }, null);
     })();
     /***/
 
@@ -254,33 +329,57 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
     /* harmony import */
 
 
-    var _app_component__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(
-    /*! ./app.component */
-    "./src/app/app.component.ts");
-    /* harmony import */
-
-
-    var _angular_service_worker__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(
+    var _angular_service_worker__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(
     /*! @angular/service-worker */
     "./node_modules/@angular/service-worker/__ivy_ngcc__/fesm2015/service-worker.js");
     /* harmony import */
 
 
-    var _environments_environment__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(
+    var _angular_fire__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(
+    /*! @angular/fire */
+    "./node_modules/@angular/fire/__ivy_ngcc__/fesm2015/angular-fire.js");
+    /* harmony import */
+
+
+    var _angular_fire_analytics__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(
+    /*! @angular/fire/analytics */
+    "./node_modules/@angular/fire/__ivy_ngcc__/fesm2015/angular-fire-analytics.js");
+    /* harmony import */
+
+
+    var _angular_fire_firestore__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(
+    /*! @angular/fire/firestore */
+    "./node_modules/@angular/fire/__ivy_ngcc__/fesm2015/angular-fire-firestore.js");
+    /* harmony import */
+
+
+    var _environments_environment__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(
     /*! ../environments/environment */
     "./src/environments/environment.ts");
     /* harmony import */
 
 
-    var _flame_flame_component__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(
+    var _app_component__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(
+    /*! ./app.component */
+    "./src/app/app.component.ts");
+    /* harmony import */
+
+
+    var _flame_flame_component__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(
     /*! ./flame/flame.component */
     "./src/app/flame/flame.component.ts");
     /* harmony import */
 
 
-    var _safe_pipe__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(
+    var _safe_pipe__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(
     /*! ./safe.pipe */
     "./src/app/safe.pipe.ts");
+    /* harmony import */
+
+
+    var _key_track_by_pipe__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(
+    /*! ./key-track-by.pipe */
+    "./src/app/key-track-by.pipe.ts");
 
     var AppModule = function AppModule() {
       _classCallCheck(this, AppModule);
@@ -288,22 +387,22 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 
     AppModule.ɵmod = _angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵɵdefineNgModule"]({
       type: AppModule,
-      bootstrap: [_app_component__WEBPACK_IMPORTED_MODULE_2__["AppComponent"]]
+      bootstrap: [_app_component__WEBPACK_IMPORTED_MODULE_7__["AppComponent"]]
     });
     AppModule.ɵinj = _angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵɵdefineInjector"]({
       factory: function AppModule_Factory(t) {
         return new (t || AppModule)();
       },
       providers: [],
-      imports: [[_angular_platform_browser__WEBPACK_IMPORTED_MODULE_0__["BrowserModule"], _angular_service_worker__WEBPACK_IMPORTED_MODULE_3__["ServiceWorkerModule"].register('ngsw-worker.js', {
-        enabled: _environments_environment__WEBPACK_IMPORTED_MODULE_4__["environment"].production
-      })]]
+      imports: [[_angular_platform_browser__WEBPACK_IMPORTED_MODULE_0__["BrowserModule"], _angular_service_worker__WEBPACK_IMPORTED_MODULE_2__["ServiceWorkerModule"].register('ngsw-worker.js', {
+        enabled: _environments_environment__WEBPACK_IMPORTED_MODULE_6__["environment"].production
+      }), _angular_fire__WEBPACK_IMPORTED_MODULE_3__["AngularFireModule"].initializeApp(_environments_environment__WEBPACK_IMPORTED_MODULE_6__["environment"].firebase), _angular_fire_analytics__WEBPACK_IMPORTED_MODULE_4__["AngularFireAnalyticsModule"], _angular_fire_firestore__WEBPACK_IMPORTED_MODULE_5__["AngularFirestoreModule"]]]
     });
 
     (function () {
       (typeof ngJitMode === "undefined" || ngJitMode) && _angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵɵsetNgModuleScope"](AppModule, {
-        declarations: [_app_component__WEBPACK_IMPORTED_MODULE_2__["AppComponent"], _flame_flame_component__WEBPACK_IMPORTED_MODULE_5__["FlameComponent"], _safe_pipe__WEBPACK_IMPORTED_MODULE_6__["SafePipe"]],
-        imports: [_angular_platform_browser__WEBPACK_IMPORTED_MODULE_0__["BrowserModule"], _angular_service_worker__WEBPACK_IMPORTED_MODULE_3__["ServiceWorkerModule"]]
+        declarations: [_app_component__WEBPACK_IMPORTED_MODULE_7__["AppComponent"], _flame_flame_component__WEBPACK_IMPORTED_MODULE_8__["FlameComponent"], _safe_pipe__WEBPACK_IMPORTED_MODULE_9__["SafePipe"], _key_track_by_pipe__WEBPACK_IMPORTED_MODULE_10__["KeyTrackByPipe"]],
+        imports: [_angular_platform_browser__WEBPACK_IMPORTED_MODULE_0__["BrowserModule"], _angular_service_worker__WEBPACK_IMPORTED_MODULE_2__["ServiceWorkerModule"], _angular_fire__WEBPACK_IMPORTED_MODULE_3__["AngularFireModule"], _angular_fire_analytics__WEBPACK_IMPORTED_MODULE_4__["AngularFireAnalyticsModule"], _angular_fire_firestore__WEBPACK_IMPORTED_MODULE_5__["AngularFirestoreModule"]]
       });
     })();
     /*@__PURE__*/
@@ -313,12 +412,12 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
       _angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵsetClassMetadata"](AppModule, [{
         type: _angular_core__WEBPACK_IMPORTED_MODULE_1__["NgModule"],
         args: [{
-          declarations: [_app_component__WEBPACK_IMPORTED_MODULE_2__["AppComponent"], _flame_flame_component__WEBPACK_IMPORTED_MODULE_5__["FlameComponent"], _safe_pipe__WEBPACK_IMPORTED_MODULE_6__["SafePipe"]],
-          imports: [_angular_platform_browser__WEBPACK_IMPORTED_MODULE_0__["BrowserModule"], _angular_service_worker__WEBPACK_IMPORTED_MODULE_3__["ServiceWorkerModule"].register('ngsw-worker.js', {
-            enabled: _environments_environment__WEBPACK_IMPORTED_MODULE_4__["environment"].production
-          })],
+          declarations: [_app_component__WEBPACK_IMPORTED_MODULE_7__["AppComponent"], _flame_flame_component__WEBPACK_IMPORTED_MODULE_8__["FlameComponent"], _safe_pipe__WEBPACK_IMPORTED_MODULE_9__["SafePipe"], _key_track_by_pipe__WEBPACK_IMPORTED_MODULE_10__["KeyTrackByPipe"]],
+          imports: [_angular_platform_browser__WEBPACK_IMPORTED_MODULE_0__["BrowserModule"], _angular_service_worker__WEBPACK_IMPORTED_MODULE_2__["ServiceWorkerModule"].register('ngsw-worker.js', {
+            enabled: _environments_environment__WEBPACK_IMPORTED_MODULE_6__["environment"].production
+          }), _angular_fire__WEBPACK_IMPORTED_MODULE_3__["AngularFireModule"].initializeApp(_environments_environment__WEBPACK_IMPORTED_MODULE_6__["environment"].firebase), _angular_fire_analytics__WEBPACK_IMPORTED_MODULE_4__["AngularFireAnalyticsModule"], _angular_fire_firestore__WEBPACK_IMPORTED_MODULE_5__["AngularFirestoreModule"]],
           providers: [],
-          bootstrap: [_app_component__WEBPACK_IMPORTED_MODULE_2__["AppComponent"]]
+          bootstrap: [_app_component__WEBPACK_IMPORTED_MODULE_7__["AppComponent"]]
         }]
       }], null, null);
     })();
@@ -345,19 +444,21 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
     __webpack_require__.d(__webpack_exports__, "Flame", function () {
       return Flame;
     });
-    /**
-     * 炎クラス。
-     *
-     * TODO: birthDateが規定の時間を超えると消火される。
-     */
+    /** 炎クラス。 */
 
 
-    var Flame = function Flame(opt) {
+    var Flame = function Flame() {
+      var opt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
       _classCallCheck(this, Flame);
 
-      this.birthDate = opt.birthDate;
-      this.x = opt.x;
-      this.y = opt.y;
+      var _a, _b, _c, _d;
+
+      this.id = (_a = opt.id, _a !== null && _a !== void 0 ? _a : null);
+      this.updatedAt = new Date();
+      this.hue = (_b = opt.hue, _b !== null && _b !== void 0 ? _b : Math.ceil(Math.random() * 360));
+      this.x = (_c = opt.x, _c !== null && _c !== void 0 ? _c : 0);
+      this.y = (_d = opt.y, _d !== null && _d !== void 0 ? _d : 0);
     };
     /***/
 
@@ -394,6 +495,12 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
     var _angular_common__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(
     /*! @angular/common */
     "./node_modules/@angular/common/__ivy_ngcc__/fesm2015/common.js");
+    /* harmony import */
+
+
+    var _key_track_by_pipe__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(
+    /*! ../key-track-by.pipe */
+    "./src/app/key-track-by.pipe.ts");
 
     var _c0 = ["appFlame", ""];
 
@@ -405,16 +512,16 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
       }
 
       if (rf & 2) {
-        var seed_r5 = ctx.$implicit;
-        var i_r6 = ctx.index;
+        var seed_r3 = ctx.$implicit;
+        var i_r4 = ctx.index;
 
-        var ctx_r4 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]();
+        var ctx_r2 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]();
 
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵstyleProp"]("animation-duration", ctx_r4.DURATION, "ms")("animation-delay", i_r6 * ctx_r4.DURATION / ctx_r4.fireSeeds.length, "ms");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵstyleProp"]("animation-duration", ctx_r2.DURATION, "ms")("animation-delay", i_r4 * ctx_r2.DURATION / ctx_r2.fireSeeds.length, "ms");
 
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵattributeInterpolate1"]("fill", "url(#", ctx_r4.id, ")");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵattributeInterpolate1"]("fill", "url(#", ctx_r2.id, ")");
 
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵattribute"]("r", ctx_r4.VOLUME)("cx", seed_r5.cx)("cy", seed_r5.cy);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵattribute"]("r", ctx_r2.VOLUME)("cx", seed_r3.cx)("cy", seed_r3.cy);
       }
     }
     /** 火種の基準大きさ。 */
@@ -441,7 +548,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 
     var getFireSeeds = function getFireSeeds() {
       var random = function random() {
-        return Math.floor(Math.random() * VOLUME);
+        return Math.ceil(Math.random() * VOLUME);
       };
 
       return _toConsumableArray(Array(SIZE)).map(function (_, i) {
@@ -457,27 +564,15 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
      */
 
 
-    var FlameComponent =
-    /*#__PURE__*/
-    function () {
-      function FlameComponent() {
-        _classCallCheck(this, FlameComponent);
+    var FlameComponent = function FlameComponent() {
+      _classCallCheck(this, FlameComponent);
 
-        this.id = getUUID();
-        this.fireSeeds = getFireSeeds();
-        this.VOLUME = VOLUME;
-        this.DURATION = DURATION;
-      }
-
-      _createClass(FlameComponent, [{
-        key: "trackByFn",
-        value: function trackByFn(i, item) {
-          return item.id;
-        }
-      }]);
-
-      return FlameComponent;
-    }();
+      this.id = getUUID();
+      this.fireSeeds = getFireSeeds();
+      this.VOLUME = VOLUME;
+      this.DURATION = DURATION;
+      this.hue = 0;
+    };
 
     FlameComponent.ɵfac = function FlameComponent_Factory(t) {
       return new (t || FlameComponent)();
@@ -486,10 +581,13 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
     FlameComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({
       type: FlameComponent,
       selectors: [["", "appFlame", ""]],
+      inputs: {
+        hue: "hue"
+      },
       attrs: _c0,
-      decls: 5,
-      vars: 3,
-      consts: [["offset", "0", "stop-color", "hsl(10, 90%, 80%)"], ["offset", ".4", "stop-color", "hsl(20, 90%, 60%)"], ["offset", "1", "stop-color", "hsl(40, 90%, 0%)"], [3, "animationDuration", "animationDelay", 4, "ngFor", "ngForOf", "ngForTrackBy"]],
+      decls: 6,
+      vars: 6,
+      consts: [["offset", "0", "stop-color", "hsl(10, 90%, 80%)"], ["offset", ".4"], ["offset", "1", "stop-color", "hsl(40, 90%, 0%)"], [3, "animationDuration", "animationDelay", 4, "ngFor", "ngForOf", "ngForTrackBy"]],
       template: function FlameComponent_Template(rf, ctx) {
         if (rf & 1) {
           _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnamespaceSVG"]();
@@ -505,18 +603,25 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
           _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
 
           _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](4, FlameComponent__svg_circle_4_Template, 1, 8, "circle", 3);
+
+          _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpipe"](5, "keyTrackBy");
         }
 
         if (rf & 2) {
           _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵattribute"]("id", ctx.id);
 
-          _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](4);
+          _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
 
-          _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngForOf", ctx.fireSeeds)("ngForTrackBy", ctx.trackByFn);
+          _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵattributeInterpolate1"]("stop-color", "hsl(", ctx.hue, ", 90%, 60%)");
+
+          _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
+
+          _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngForOf", ctx.fireSeeds)("ngForTrackBy", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpipeBind1"](5, 4, "id"));
         }
       },
       directives: [_angular_common__WEBPACK_IMPORTED_MODULE_1__["NgForOf"]],
-      styles: ["circle[_ngcontent-%COMP%] {\n  mix-blend-mode: screen;\n  -webkit-animation-name: particle;\n          animation-name: particle;\n  -webkit-animation-iteration-count: infinite;\n          animation-iteration-count: infinite;\n  opacity: 0;\n}\n\n@-webkit-keyframes particle {\n  0% {\n    -webkit-transform: scale(1, 0.7) translate(0, 0);\n            transform: scale(1, 0.7) translate(0, 0);\n    opacity: 0;\n  }\n  8% {\n    -webkit-transform: scale(1, 1.3) translate(-1%, -3%);\n            transform: scale(1, 1.3) translate(-1%, -3%);\n    opacity: 1;\n  }\n  100% {\n    -webkit-transform: scale(0.4) translate(0, -30%);\n            transform: scale(0.4) translate(0, -30%);\n    opacity: 0;\n  }\n}\n\n@keyframes particle {\n  0% {\n    -webkit-transform: scale(1, 0.7) translate(0, 0);\n            transform: scale(1, 0.7) translate(0, 0);\n    opacity: 0;\n  }\n  8% {\n    -webkit-transform: scale(1, 1.3) translate(-1%, -3%);\n            transform: scale(1, 1.3) translate(-1%, -3%);\n    opacity: 1;\n  }\n  100% {\n    -webkit-transform: scale(0.4) translate(0, -30%);\n            transform: scale(0.4) translate(0, -30%);\n    opacity: 0;\n  }\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi9ob21lL3J1bm5lci93b3JrL3Rha2liaS90YWtpYmkvc3JjL2FwcC9mbGFtZS9mbGFtZS5jb21wb25lbnQuc2NzcyIsInNyYy9hcHAvZmxhbWUvZmxhbWUuY29tcG9uZW50LnNjc3MiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUE7RUFDRSxzQkFBQTtFQUNBLGdDQUFBO1VBQUEsd0JBQUE7RUFDQSwyQ0FBQTtVQUFBLG1DQUFBO0VBQ0EsVUFBQTtBQ0NGOztBREVBO0VBQ0U7SUFDRSxnREFBQTtZQUFBLHdDQUFBO0lBQ0EsVUFBQTtFQ0NGO0VERUE7SUFDRSxvREFBQTtZQUFBLDRDQUFBO0lBQ0EsVUFBQTtFQ0FGO0VER0E7SUFDRSxnREFBQTtZQUFBLHdDQUFBO0lBQ0EsVUFBQTtFQ0RGO0FBQ0Y7O0FEYkE7RUFDRTtJQUNFLGdEQUFBO1lBQUEsd0NBQUE7SUFDQSxVQUFBO0VDQ0Y7RURFQTtJQUNFLG9EQUFBO1lBQUEsNENBQUE7SUFDQSxVQUFBO0VDQUY7RURHQTtJQUNFLGdEQUFBO1lBQUEsd0NBQUE7SUFDQSxVQUFBO0VDREY7QUFDRiIsImZpbGUiOiJzcmMvYXBwL2ZsYW1lL2ZsYW1lLmNvbXBvbmVudC5zY3NzIiwic291cmNlc0NvbnRlbnQiOlsiY2lyY2xlIHtcbiAgbWl4LWJsZW5kLW1vZGU6IHNjcmVlbjtcbiAgYW5pbWF0aW9uLW5hbWU6IHBhcnRpY2xlO1xuICBhbmltYXRpb24taXRlcmF0aW9uLWNvdW50OiBpbmZpbml0ZTtcbiAgb3BhY2l0eTogMDtcbn1cblxuQGtleWZyYW1lcyBwYXJ0aWNsZSB7XG4gIDAlIHtcbiAgICB0cmFuc2Zvcm06IHNjYWxlKDEsIDAuNykgdHJhbnNsYXRlKDAsIDApO1xuICAgIG9wYWNpdHk6IDA7XG4gIH1cblxuICA4JSB7XG4gICAgdHJhbnNmb3JtOiBzY2FsZSgxLCAxLjMpIHRyYW5zbGF0ZSgtMSUsIC0zJSk7XG4gICAgb3BhY2l0eTogMTtcbiAgfVxuXG4gIDEwMCUge1xuICAgIHRyYW5zZm9ybTogc2NhbGUoMC40KSB0cmFuc2xhdGUoMCwgLTMwJSk7XG4gICAgb3BhY2l0eTogMDtcbiAgfVxufVxuIiwiY2lyY2xlIHtcbiAgbWl4LWJsZW5kLW1vZGU6IHNjcmVlbjtcbiAgYW5pbWF0aW9uLW5hbWU6IHBhcnRpY2xlO1xuICBhbmltYXRpb24taXRlcmF0aW9uLWNvdW50OiBpbmZpbml0ZTtcbiAgb3BhY2l0eTogMDtcbn1cblxuQGtleWZyYW1lcyBwYXJ0aWNsZSB7XG4gIDAlIHtcbiAgICB0cmFuc2Zvcm06IHNjYWxlKDEsIDAuNykgdHJhbnNsYXRlKDAsIDApO1xuICAgIG9wYWNpdHk6IDA7XG4gIH1cbiAgOCUge1xuICAgIHRyYW5zZm9ybTogc2NhbGUoMSwgMS4zKSB0cmFuc2xhdGUoLTElLCAtMyUpO1xuICAgIG9wYWNpdHk6IDE7XG4gIH1cbiAgMTAwJSB7XG4gICAgdHJhbnNmb3JtOiBzY2FsZSgwLjQpIHRyYW5zbGF0ZSgwLCAtMzAlKTtcbiAgICBvcGFjaXR5OiAwO1xuICB9XG59Il19 */"],
+      pipes: [_key_track_by_pipe__WEBPACK_IMPORTED_MODULE_2__["KeyTrackByPipe"]],
+      styles: ["circle[_ngcontent-%COMP%] {\n  mix-blend-mode: screen;\n  -webkit-animation-name: particle;\n          animation-name: particle;\n  -webkit-animation-iteration-count: infinite;\n          animation-iteration-count: infinite;\n  opacity: 0;\n  will-change: transform, opacity;\n}\n\n@-webkit-keyframes particle {\n  0% {\n    -webkit-transform: scale(1, 0.7) translate(0, 0);\n            transform: scale(1, 0.7) translate(0, 0);\n    opacity: 0;\n  }\n  8% {\n    -webkit-transform: scale(1, 1.3) translate(-1%, -3%);\n            transform: scale(1, 1.3) translate(-1%, -3%);\n    opacity: 1;\n  }\n  100% {\n    -webkit-transform: scale(0.4) translate(0, -30%);\n            transform: scale(0.4) translate(0, -30%);\n    opacity: 0;\n  }\n}\n\n@keyframes particle {\n  0% {\n    -webkit-transform: scale(1, 0.7) translate(0, 0);\n            transform: scale(1, 0.7) translate(0, 0);\n    opacity: 0;\n  }\n  8% {\n    -webkit-transform: scale(1, 1.3) translate(-1%, -3%);\n            transform: scale(1, 1.3) translate(-1%, -3%);\n    opacity: 1;\n  }\n  100% {\n    -webkit-transform: scale(0.4) translate(0, -30%);\n            transform: scale(0.4) translate(0, -30%);\n    opacity: 0;\n  }\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi9ob21lL3J1bm5lci93b3JrL3Rha2liaS90YWtpYmkvc3JjL2FwcC9mbGFtZS9mbGFtZS5jb21wb25lbnQuc2NzcyIsInNyYy9hcHAvZmxhbWUvZmxhbWUuY29tcG9uZW50LnNjc3MiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUE7RUFDRSxzQkFBQTtFQUNBLGdDQUFBO1VBQUEsd0JBQUE7RUFDQSwyQ0FBQTtVQUFBLG1DQUFBO0VBQ0EsVUFBQTtFQUNBLCtCQUFBO0FDQ0Y7O0FERUE7RUFDRTtJQUNFLGdEQUFBO1lBQUEsd0NBQUE7SUFDQSxVQUFBO0VDQ0Y7RURFQTtJQUNFLG9EQUFBO1lBQUEsNENBQUE7SUFDQSxVQUFBO0VDQUY7RURHQTtJQUNFLGdEQUFBO1lBQUEsd0NBQUE7SUFDQSxVQUFBO0VDREY7QUFDRjs7QURiQTtFQUNFO0lBQ0UsZ0RBQUE7WUFBQSx3Q0FBQTtJQUNBLFVBQUE7RUNDRjtFREVBO0lBQ0Usb0RBQUE7WUFBQSw0Q0FBQTtJQUNBLFVBQUE7RUNBRjtFREdBO0lBQ0UsZ0RBQUE7WUFBQSx3Q0FBQTtJQUNBLFVBQUE7RUNERjtBQUNGIiwiZmlsZSI6InNyYy9hcHAvZmxhbWUvZmxhbWUuY29tcG9uZW50LnNjc3MiLCJzb3VyY2VzQ29udGVudCI6WyJjaXJjbGUge1xuICBtaXgtYmxlbmQtbW9kZTogc2NyZWVuO1xuICBhbmltYXRpb24tbmFtZTogcGFydGljbGU7XG4gIGFuaW1hdGlvbi1pdGVyYXRpb24tY291bnQ6IGluZmluaXRlO1xuICBvcGFjaXR5OiAwO1xuICB3aWxsLWNoYW5nZTogdHJhbnNmb3JtLCBvcGFjaXR5O1xufVxuXG5Aa2V5ZnJhbWVzIHBhcnRpY2xlIHtcbiAgMCUge1xuICAgIHRyYW5zZm9ybTogc2NhbGUoMSwgMC43KSB0cmFuc2xhdGUoMCwgMCk7XG4gICAgb3BhY2l0eTogMDtcbiAgfVxuXG4gIDglIHtcbiAgICB0cmFuc2Zvcm06IHNjYWxlKDEsIDEuMykgdHJhbnNsYXRlKC0xJSwgLTMlKTtcbiAgICBvcGFjaXR5OiAxO1xuICB9XG5cbiAgMTAwJSB7XG4gICAgdHJhbnNmb3JtOiBzY2FsZSgwLjQpIHRyYW5zbGF0ZSgwLCAtMzAlKTtcbiAgICBvcGFjaXR5OiAwO1xuICB9XG59XG4iLCJjaXJjbGUge1xuICBtaXgtYmxlbmQtbW9kZTogc2NyZWVuO1xuICBhbmltYXRpb24tbmFtZTogcGFydGljbGU7XG4gIGFuaW1hdGlvbi1pdGVyYXRpb24tY291bnQ6IGluZmluaXRlO1xuICBvcGFjaXR5OiAwO1xuICB3aWxsLWNoYW5nZTogdHJhbnNmb3JtLCBvcGFjaXR5O1xufVxuXG5Aa2V5ZnJhbWVzIHBhcnRpY2xlIHtcbiAgMCUge1xuICAgIHRyYW5zZm9ybTogc2NhbGUoMSwgMC43KSB0cmFuc2xhdGUoMCwgMCk7XG4gICAgb3BhY2l0eTogMDtcbiAgfVxuICA4JSB7XG4gICAgdHJhbnNmb3JtOiBzY2FsZSgxLCAxLjMpIHRyYW5zbGF0ZSgtMSUsIC0zJSk7XG4gICAgb3BhY2l0eTogMTtcbiAgfVxuICAxMDAlIHtcbiAgICB0cmFuc2Zvcm06IHNjYWxlKDAuNCkgdHJhbnNsYXRlKDAsIC0zMCUpO1xuICAgIG9wYWNpdHk6IDA7XG4gIH1cbn0iXX0= */"],
       changeDetection: 0
     });
     /*@__PURE__*/
@@ -529,6 +634,90 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
           templateUrl: './flame.component.html',
           styleUrls: ['./flame.component.scss'],
           changeDetection: _angular_core__WEBPACK_IMPORTED_MODULE_0__["ChangeDetectionStrategy"].OnPush
+        }]
+      }], null, {
+        hue: [{
+          type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["Input"]
+        }]
+      });
+    })();
+    /***/
+
+  },
+
+  /***/
+  "./src/app/key-track-by.pipe.ts":
+  /*!**************************************!*\
+    !*** ./src/app/key-track-by.pipe.ts ***!
+    \**************************************/
+
+  /*! exports provided: KeyTrackByPipe */
+
+  /***/
+  function srcAppKeyTrackByPipeTs(module, __webpack_exports__, __webpack_require__) {
+    "use strict";
+
+    __webpack_require__.r(__webpack_exports__);
+    /* harmony export (binding) */
+
+
+    __webpack_require__.d(__webpack_exports__, "KeyTrackByPipe", function () {
+      return KeyTrackByPipe;
+    });
+    /* harmony import */
+
+
+    var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(
+    /*! @angular/core */
+    "./node_modules/@angular/core/__ivy_ngcc__/fesm2015/core.js");
+    /**
+     * `{ id: number, name: string }[]`のような、ユニークな値を持つオブジェクトの配列に対して、
+     * 簡単に{@link https://angular.io/api/core/TrackByFunction TrackByFunction}を設定するためのパイプ。
+     *
+     * @example
+     * <!-- `{ id: number, name: string }[]` -->
+     * <div *ngFor="let item of items; trackBy: 'id' | keyTrackBy">{{ item.id }}: {{ item.name }}</div>
+     *
+     * <!-- `{ id: number | null, name: string | null }[]` 実際は↑の型じゃなくて←みたいな型になりがちだよね、、、 -->
+     * <input name="name" [(ngModel)]="item.name" *ngFor="let item of items; trackBy: null | keyTrackBy">
+     */
+
+
+    var KeyTrackByPipe =
+    /*#__PURE__*/
+    function () {
+      function KeyTrackByPipe() {
+        _classCallCheck(this, KeyTrackByPipe);
+      }
+
+      _createClass(KeyTrackByPipe, [{
+        key: "transform",
+        value: function transform(key) {
+          return function (i, item) {
+            return key == null ? item : item[key];
+          };
+        }
+      }]);
+
+      return KeyTrackByPipe;
+    }();
+
+    KeyTrackByPipe.ɵfac = function KeyTrackByPipe_Factory(t) {
+      return new (t || KeyTrackByPipe)();
+    };
+
+    KeyTrackByPipe.ɵpipe = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefinePipe"]({
+      name: "keyTrackBy",
+      type: KeyTrackByPipe,
+      pure: true
+    });
+    /*@__PURE__*/
+
+    (function () {
+      _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵsetClassMetadata"](KeyTrackByPipe, [{
+        type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["Pipe"],
+        args: [{
+          name: 'keyTrackBy'
         }]
       }], null, null);
     })();
@@ -641,6 +830,39 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
   },
 
   /***/
+  "./src/environments/environment.firebase.ts":
+  /*!**************************************************!*\
+    !*** ./src/environments/environment.firebase.ts ***!
+    \**************************************************/
+
+  /*! exports provided: environment */
+
+  /***/
+  function srcEnvironmentsEnvironmentFirebaseTs(module, __webpack_exports__, __webpack_require__) {
+    "use strict";
+
+    __webpack_require__.r(__webpack_exports__);
+    /* harmony export (binding) */
+
+
+    __webpack_require__.d(__webpack_exports__, "environment", function () {
+      return environment;
+    });
+
+    var environment = {
+      apiKey: 'AIzaSyAHN_oPqrdltONR8VVxMXe6iVZfgJDehhU',
+      authDomain: 'takibi-2d9a2.firebaseapp.com',
+      databaseURL: 'https://takibi-2d9a2.firebaseio.com',
+      projectId: 'takibi-2d9a2',
+      storageBucket: 'takibi-2d9a2.appspot.com',
+      messagingSenderId: '751221724633',
+      appId: '1:751221724633:web:e4c3a5a3a8def2d05575c8',
+      measurementId: 'G-HQJF1V5Z9'
+    };
+    /***/
+  },
+
+  /***/
   "./src/environments/environment.ts":
   /*!*****************************************!*\
     !*** ./src/environments/environment.ts ***!
@@ -658,12 +880,19 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 
     __webpack_require__.d(__webpack_exports__, "environment", function () {
       return environment;
-    }); // This file can be replaced during build by using the `fileReplacements` array.
+    });
+    /* harmony import */
+
+
+    var _environment_firebase__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(
+    /*! ./environment.firebase */
+    "./src/environments/environment.firebase.ts"); // This file can be replaced during build by using the `fileReplacements` array.
     // `ng build --prod` replaces `environment.ts` with `environment.prod.ts`.
     // The list of file replacements can be found in `angular.json`.
 
 
     var environment = {
+      firebase: _environment_firebase__WEBPACK_IMPORTED_MODULE_0__["environment"],
       production: false
     };
     /*
