@@ -17,7 +17,7 @@ import { first, map } from 'rxjs/operators';
 import { Flame } from './flame';
 
 const ERR_MSG =
-  'Firebaseでなにか問題が発生したのかもしれません。 しばらく経ってからログインして下さい。';
+  'Firebaseでなにか問題が発生したのかもしれません。 しばらく経ってから再度更新して下さい。';
 
 @Component({
   selector: 'app-root',
